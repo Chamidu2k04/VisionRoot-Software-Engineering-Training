@@ -1,0 +1,25 @@
+# Daily Evidence Record — Day 01
+
+- **Date:** 2026-11-12
+- **Day / Topic:** Day 01 & Day 03 Setup — Requirements, SDLC, and Repository Baseline
+- **Objective:** Initialize repository standards, define the problem statement, MVP scope, functional/non-functional requirements, user stories, acceptance criteria, and PR template.
+- **What I learned:** How to translate a business problem into structured user stories with verifiable Given/When/Then acceptance criteria, define strict state transition rules upfront, and establish secret-safe Git workflows.
+- **What I implemented:** Created `.gitignore`, `.env.example`, `README.md`, `.github/pull_request_template.md`, and `docs/requirements.md`.
+- **Files / folders changed:**
+  - `.gitignore`
+  - `.env.example`
+  - `README.md`
+  - `.github/pull_request_template.md`
+  - `docs/requirements.md`
+  - `evidence/Day-01/daily-log.md`
+- **How I tested it:** Manually reviewed all Markdown files, acceptance criteria completeness, and verified `.gitignore` excludes `.env` files while keeping `.env.example`.
+- **Evidence links (screenshots, tests, diagrams):** `docs/requirements.md`, `.github/pull_request_template.md`
+- **Problem encountered:** None.
+- **How I investigated it:** N/A
+- **Root cause:** N/A
+- **How I fixed it:** N/A
+- **What I would improve:** Add a visual Kanban board screenshot once implementation tasks begin.
+- **GitHub branch:** `docs/day-01-setup-and-requirements`
+- **Pull request:** Created upon branch push to `main`
+- **Commit hash:** Recorded in Git commit history for `docs/day-01-setup-and-requirements`
+- **Blockers / questions for supervisor:** None.
