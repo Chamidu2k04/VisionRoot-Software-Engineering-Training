@@ -16,12 +16,12 @@ const NEXT_STATUS_MAP: Record<
 > = {
   OPEN: {
     nextStatus: 'IN_PROGRESS',
-    actionLabel: 'Mark In Progress',
+    actionLabel: 'Advance to In Progress',
     btnClass: 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500 text-white',
   },
   IN_PROGRESS: {
     nextStatus: 'RESOLVED',
-    actionLabel: 'Mark as Resolved',
+    actionLabel: 'Advance to Resolved',
     btnClass:
       'bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 text-white',
   },
@@ -38,8 +38,50 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
   onClose,
   onStatusUpdated,
 }) => {
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [currentRequest, setCurrentRequest] = useState<ServiceRequest | null>(
+    request
+  );
+  const [isLoadingDetails, setIsLoadingDetails] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [transitionError, setTransitionError] = useState<string | null>(null);
+
+  // Fetch live request details from GET /api/requests/:id when opened
+  useEffect(() => {
+    if (!request?.id) {
+      setCurrentRequest(null);
+      return;
+    }
+
+    setCurrentRequest(request);
+    setIsLoadingDetails(true);
+    setTransitionError(null);
+
+    let isMounted = true;
+    requestsApi
+      .getRequestById(request.id)
+      .then((liveRequest) => {
+        if (isMounted) {
+          setCurrentRequest(liveRequest);
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          console.warn(
+            '[RequestDetailsModal] Could not refresh live details, using cached:',
+            err
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [request?.id]);
 
   // Close on Escape key press
   useEffect(() => {
@@ -54,21 +96,22 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [request, onClose]);
 
-  if (!request) return null;
+  if (!request || !currentRequest) return null;
 
-  const nextAction = NEXT_STATUS_MAP[request.status];
+  const nextAction = NEXT_STATUS_MAP[currentRequest.status];
 
   const handleStatusTransition = async () => {
-    if (!nextAction) return;
+    if (!nextAction || !currentRequest) return;
 
     setIsUpdating(true);
     setTransitionError(null);
 
     try {
       const updated = await requestsApi.updateRequestStatus(
-        request.id,
+        currentRequest.id,
         nextAction.nextStatus
       );
+      setCurrentRequest(updated);
       onStatusUpdated(updated);
     } catch (err) {
       if (err instanceof ApiError && err.payload?.message) {
@@ -130,17 +173,41 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
               </span>
               <span
                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getStatusBadge(
-                  request.status
+                  currentRequest.status
                 )}`}
               >
-                {request.status.replace('_', ' ')}
+                {currentRequest.status.replace('_', ' ')}
               </span>
+              {isLoadingDetails && (
+                <span className="inline-flex items-center text-xs text-indigo-600 font-medium">
+                  <svg
+                    className="animate-spin mr-1 h-3 w-3 text-indigo-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
+                  </svg>
+                  Syncing...
+                </span>
+              )}
             </div>
             <h2
               id="modal-title"
               className="text-xl font-bold text-slate-900 mt-2"
             >
-              {request.title}
+              {currentRequest.title}
             </h2>
           </div>
 
@@ -171,9 +238,26 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
           {transitionError && (
             <div
               role="alert"
-              className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-center justify-between"
+              aria-live="assertive"
+              className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start justify-between"
             >
-              <span>{transitionError}</span>
+              <div className="flex items-start space-x-2">
+                <svg
+                  className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div>
+                  <span className="font-semibold">Backend Error:</span>{' '}
+                  {transitionError}
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setTransitionError(null)}
@@ -190,7 +274,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
               Description
             </h3>
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-sm whitespace-pre-wrap leading-relaxed">
-              {request.description}
+              {currentRequest.description}
             </div>
           </div>
 
@@ -201,7 +285,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                 Category
               </span>
               <span className="text-sm font-semibold text-slate-800">
-                {request.category}
+                {currentRequest.category}
               </span>
             </div>
 
@@ -210,7 +294,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                 Priority
               </span>
               <span className="text-sm font-semibold text-slate-800">
-                {request.priority}
+                {currentRequest.priority}
               </span>
             </div>
 
@@ -219,7 +303,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                 Created
               </span>
               <span className="text-xs text-slate-600 block mt-0.5">
-                {formatDate(request.created_at)}
+                {formatDate(currentRequest.created_at)}
               </span>
             </div>
 
@@ -228,7 +312,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
                 Last Updated
               </span>
               <span className="text-xs text-slate-600 block mt-0.5">
-                {formatDate(request.updated_at)}
+                {formatDate(currentRequest.updated_at)}
               </span>
             </div>
           </div>
@@ -239,7 +323,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
               Identifier (UUID):
             </span>
             <code className="block text-xs font-mono bg-slate-100 p-2 rounded text-slate-700 mt-1 select-all break-all">
-              {request.id}
+              {currentRequest.id}
             </code>
           </div>
 
@@ -248,34 +332,39 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
               Lifecycle Progress
             </span>
-            <div className="flex items-center space-x-2 text-xs">
-              {(['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'] as RequestStatus[]).map(
-                (step, idx, arr) => {
-                  const stepOrder = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
-                  const currentIndex = stepOrder.indexOf(request.status);
-                  const isCurrent = request.status === step;
-                  const isCompleted = currentIndex > idx;
+            <div className="flex items-center space-x-2 text-xs overflow-x-auto pb-1">
+              {(
+                ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'] as RequestStatus[]
+              ).map((step, idx, arr) => {
+                const stepOrder = [
+                  'OPEN',
+                  'IN_PROGRESS',
+                  'RESOLVED',
+                  'CLOSED',
+                ];
+                const currentIndex = stepOrder.indexOf(currentRequest.status);
+                const isCurrent = currentRequest.status === step;
+                const isCompleted = currentIndex > idx;
 
-                  return (
-                    <React.Fragment key={step}>
-                      <span
-                        className={`px-2.5 py-1 rounded-md font-medium text-xs border ${
-                          isCurrent
-                            ? 'bg-indigo-600 text-white border-indigo-600 font-bold'
-                            : isCompleted
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-slate-100 text-slate-400 border-slate-200'
-                        }`}
-                      >
-                        {step.replace('_', ' ')}
-                      </span>
-                      {idx < arr.length - 1 && (
-                        <span className="text-slate-300 font-bold">→</span>
-                      )}
-                    </React.Fragment>
-                  );
-                }
-              )}
+                return (
+                  <React.Fragment key={step}>
+                    <span
+                      className={`px-2.5 py-1 rounded-md font-medium text-xs border whitespace-nowrap ${
+                        isCurrent
+                          ? 'bg-indigo-600 text-white border-indigo-600 font-bold'
+                          : isCompleted
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-slate-100 text-slate-400 border-slate-200'
+                      }`}
+                    >
+                      {step.replace('_', ' ')}
+                    </span>
+                    {idx < arr.length - 1 && (
+                      <span className="text-slate-300 font-bold">→</span>
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -294,7 +383,7 @@ export const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
             <button
               type="button"
               disabled={isUpdating}
-              onClick={handleStatusTransition}
+              onClick={() => handleStatusTransition()}
               className={`w-full sm:w-auto inline-flex items-center justify-center px-5 py-2 rounded-lg text-sm font-medium shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${nextAction.btnClass}`}
             >
               {isUpdating ? (

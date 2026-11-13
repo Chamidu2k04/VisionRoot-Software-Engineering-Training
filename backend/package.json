@@ -10,6 +10,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "test": "tsx --test tests/**/*.test.ts",
     "verify": "tsx scripts/verify-api.ts",
+    "smoke-test": "tsx scripts/smoke-test.ts",
     "migrate": "tsx src/database/migrate.ts"
   },
   "keywords": [

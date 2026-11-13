@@ -1,0 +1,84 @@
+# Daily Evidence Record — Day 07
+
+- **Date:** 2026-11-13
+- **Day / Topic:** Day 07 — Full-Stack Integration and Business Workflows
+- **Objective:** Connect the Next.js frontend UI (`frontend/`), Express + TypeScript modular monolith backend (`backend/`), and PostgreSQL database (`database/`) into a seamless, reliable full-stack end-to-end workflow. Make the live API the authoritative default data source without mock fallbacks, handle standardized error envelopes, configure CORS preflight handling for `PATCH` requests, build an automated smoke-test script, and thoroughly verify the service request lifecycle and business rules.
+- **What I learned:**
+  - **Full-Stack Error Contracts:** How to map standardized server error envelopes (`{ error: { code, message, details } }`) into strongly-typed frontend exceptions (`ApiError`) and surface actionable validation issues to users without false success alerts.
+  - **CORS Preflight Dynamics:** Why HTTP `PATCH` requests carrying `Content-Type: application/json` trigger browser `OPTIONS` preflight requests, and how to configure Express CORS middleware (`methods`, `allowedHeaders`, `app.options('*')`) so browsers cleanly negotiate cross-origin status transitions.
+  - **Authoritative Server Invariants:** Why business rule enforcement must remain strictly centralized in the backend domain layer (`RequestService` state machine). While the UI guides users to valid next statuses (`OPEN` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `RESOLVED` $\rightarrow$ `CLOSED`), the server is the single source of truth and must reject illegal transitions with HTTP `400 Bad Request` and `INVALID_STATUS_TRANSITION`.
+  - **End-to-End Smoke Testing:** Designing deterministic, step-by-step CLI verification scripts (`smoke-test.ts`) that test the complete lifecycle against a live running server, validating health, creation, filtered listing, detail retrieval, invalid transition rejection, and sequential status advancements.
+- **What I implemented:**
+  - **Live API Client Integration (`frontend/src/services/requestsApi.ts`):**
+    - Configured default base URL to `process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'`.
+    - Removed automatic mock-data fallback on network errors so real API/network failures propagate cleanly to the UI.
+    - Implemented structured parsing of backend error responses (`{ error: { code, message, details } }`).
+    - Handled network disconnections by throwing an `ApiError` with actionable troubleshooting text.
+  - **Frontend UI & Business Workflow (`frontend/src/features/requests/...`):**
+    - In `CreateRequestForm.tsx`, wired submission to `POST /api/requests`, displayed clear error banners on server validation/network failure, and updated the request list only upon receiving a genuine HTTP `201 Created` response.
+    - In `RequestList.tsx`, verified status-filtered queries (`GET /api/requests?status=...`) and retryable error state when the backend is offline.
+    - In `RequestDetailsModal.tsx`, implemented live details retrieval via `GET /api/requests/:id`, status transitioning via `PATCH /api/requests/:id/status`, immediate UI state updates on HTTP `200 OK`, and error banner display on HTTP `400` invalid transition rejections.
+  - **Backend CORS Configuration (`backend/src/app.ts`):**
+    - Explicitly configured `corsOptions` with `methods: ['GET', 'POST', 'PATCH', 'OPTIONS']`, `allowedHeaders: ['Content-Type', 'Authorization']`, and `credentials: true`.
+    - Added `app.options('*', cors(corsOptions))` catch-all route for robust browser preflight handling.
+  - **End-to-End Workflow Smoke-Test Script (`backend/scripts/smoke-test.ts`):**
+    - Created runnable TypeScript script executing all 6 end-to-end lifecycle steps:
+      1. `GET /api/health` $\rightarrow$ expects 200.
+      2. `POST /api/requests` $\rightarrow$ expects 201 Created with initial status `OPEN`.
+      3. `GET /api/requests?status=OPEN` $\rightarrow$ confirms created ID is present.
+      4. `GET /api/requests/:id` $\rightarrow$ expects 200 with matching attributes.
+      5. `PATCH /api/requests/:id/status` with `CLOSED` $\rightarrow$ expects 400 with `INVALID_STATUS_TRANSITION`.
+      6. Complete sequential transition (`OPEN` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `RESOLVED` $\rightarrow$ `CLOSED`) $\rightarrow$ expects 200 at each step, plus terminal state check.
+    - Added `"smoke-test": "tsx scripts/smoke-test.ts"` to `backend/package.json`.
+  - **Automated Integration Test Suite (`backend/tests/integration/workflow.integration.test.ts`):**
+    - Added 6 in-process integration tests verifying the full controller, service, and repository lifecycle.
+  - **Integration Bug Log (`evidence/Day-07/integration-bug-log.md`):**
+    - Documented symptoms, diagnoses, root causes, and fixes for CORS preflight blocking on `PATCH` requests and silent mock-fallback masking network errors.
+- **Files / folders changed:**
+  - `backend/src/app.ts` (Explicit CORS methods, allowedHeaders, and OPTIONS preflight handler)
+  - `backend/package.json` (Added `smoke-test` script)
+  - `backend/scripts/smoke-test.ts` (End-to-end CLI workflow test script)
+  - `backend/tests/integration/workflow.integration.test.ts` (Automated integration test suite)
+  - `frontend/src/services/requestsApi.ts` (Live Express API default, error envelope unwrapping, removed mock fallback)
+  - `frontend/src/features/requests/components/RequestDetailsModal.tsx` (Live fetching, PATCH status transitions, and 400 error banner)
+  - `frontend/src/app/page.tsx` (Header badge update, real-time list sync)
+  - `evidence/Day-07/integration-bug-log.md` (Diagnostic bug log for CORS and error unwrapping)
+  - `evidence/Day-07/daily-log.md` (Daily evidence record)
+- **How I tested it:**
+  - **Backend Compilation & Linting:**
+    - Ran `npm run build` in `backend/`: TypeScript compilation passed with zero errors (`tsc`).
+    - Ran `npm run lint` in `backend/`: ESLint passed with zero errors across all TypeScript files.
+  - **Backend Automated Test Suite:**
+    - Ran `npm test` in `backend/`: 18 tests passed across 4 suites (including new `Full-Stack Integration End-to-End Workflow` suite).
+  - **Frontend Compilation:**
+    - Ran `npx tsc --noEmit` in `frontend/`: TypeScript type checking passed with zero errors.
+  - **E2E Smoke Test Execution:**
+    - Ran `npm run smoke-test` in `backend/`: Verified CLI diagnostics when backend is offline and full lifecycle pass when active.
+  - **Business Rule Enforcement:**
+    - Verified server rejects illegal transitions (`OPEN` $\rightarrow$ `CLOSED`) with HTTP `400` and code `INVALID_STATUS_TRANSITION`.
+    - Verified server rejects illegal transitions (`OPEN` $\rightarrow$ `RESOLVED`) with HTTP `400`.
+    - Verified server rejects transitions attempted from terminal `CLOSED` state with HTTP `400`.
+- **Evidence links (screenshots, tests, diagrams):**
+  - Integration Bug Log: [`evidence/Day-07/integration-bug-log.md`](integration-bug-log.md)
+  - Screenshots Directory: [`evidence/Day-07/screenshots/`](screenshots/)
+    - `01-create-request-form-filled.png`: Form filled out with new Facilities request
+    - `02-create-request-201-success.png`: Server 201 Created success alert banner with assigned UUID
+    - `03-ticket-details-modal-open.png`: Ticket details modal in OPEN status with "Advance Status to IN PROGRESS"
+    - `04-ticket-details-modal-in-progress.png`: Ticket transitioned to IN_PROGRESS via PATCH with "Advance Status to RESOLVED"
+    - `05-ticket-details-modal-resolved.png`: Ticket transitioned to RESOLVED via PATCH with "Advance Status to CLOSED"
+    - `06-ticket-details-modal-closed.png`: Ticket transitioned to terminal CLOSED state
+    - `07-e2e-smoke-test-terminal-pass.jpg`: Automated smoke-test terminal execution passing all 6 end-to-end steps
+  - Smoke Test Script: [`backend/scripts/smoke-test.ts`](../../backend/scripts/smoke-test.ts)
+  - Automated Integration Tests: [`backend/tests/integration/workflow.integration.test.ts`](../../backend/tests/integration/workflow.integration.test.ts)
+  - Frontend API Service: [`frontend/src/services/requestsApi.ts`](../../frontend/src/services/requestsApi.ts)
+  - Backend Express App Configuration: [`backend/src/app.ts`](../../backend/src/app.ts)
+  - Architecture Decision Record: [`docs/decisions/ADR-001-architecture.md`](../../docs/decisions/ADR-001-architecture.md)
+- **Problem encountered:** When testing status transitions from the Next.js frontend to the Express backend, the browser rejected `PATCH` requests due to missing preflight `OPTIONS` handling in CORS middleware. Simultaneously, legacy mock fallbacks in `requestsApi.ts` masked backend network disconnections by returning fake in-memory data.
+- **How I investigated it:** Checked browser DevTools Network headers and console logs. Noticed that the browser dispatched an `OPTIONS` preflight request that failed `Access-Control-Allow-Methods` verification. Inspected `requestsApi.ts` and discovered that network exceptions were caught and converted into synthetic mock responses.
+- **Root cause:** `PATCH` is not a simple CORS method; Express CORS required explicit method declaration and preflight handler (`app.options('*')`). Furthermore, mock fallback code left from Day 04 prototype prevented authentic full-stack network error propagation.
+- **How I fixed it:** Configured explicit `corsOptions` with `methods: ['GET', 'POST', 'PATCH', 'OPTIONS']` and `app.options('*', cors(corsOptions))` in `backend/src/app.ts`. Refactored `requestsApi.ts` to remove all automatic mock fallbacks and unwrap standardized `{ error: { code, message, details } }` payloads.
+- **What I would improve:** In future sprints, consider adding server-sent events (SSE) or WebSockets for real-time notification push to all connected browser clients when a service request status changes.
+- **GitHub branch:** `feat/day-07-fullstack-integration`
+- **Pull request:** Created upon branch push to `main`
+- **Commit hash:** Recorded in Git commit history for `feat/day-07-fullstack-integration`
+- **Blockers / questions for supervisor:** None.

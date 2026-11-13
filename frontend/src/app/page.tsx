@@ -38,9 +38,9 @@ export default function DashboardPage() {
   }, [fetchRequests]);
 
   const handleRequestCreated = (newRequest: ServiceRequest) => {
-    // If the new request matches current filter, prepend it
+    // If the new request matches current filter, prepend it immediately
     if (selectedStatus === 'ALL' || selectedStatus === newRequest.status) {
-      setRequests((prev) => [newRequest, ...prev]);
+      setRequests((prev) => [newRequest, ...prev.filter((r) => r.id !== newRequest.id)]);
     }
   };
 
@@ -79,7 +79,7 @@ export default function DashboardPage() {
           <div className="flex items-center space-x-3">
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-              Day 04 Frontend UI
+              Day 07 Live API Connected
             </span>
           </div>
         </div>
