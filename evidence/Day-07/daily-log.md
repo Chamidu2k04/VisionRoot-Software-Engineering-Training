@@ -60,6 +60,14 @@
     - Verified server rejects transitions attempted from terminal `CLOSED` state with HTTP `400`.
 - **Evidence links (screenshots, tests, diagrams):**
   - Integration Bug Log: [`evidence/Day-07/integration-bug-log.md`](integration-bug-log.md)
+  - Screenshots Directory: [`evidence/Day-07/screenshots/`](screenshots/)
+    - `01-create-request-form-filled.png`: Form filled out with new Facilities request
+    - `02-create-request-201-success.png`: Server 201 Created success alert banner with assigned UUID
+    - `03-ticket-details-modal-open.png`: Ticket details modal in OPEN status with "Advance Status to IN PROGRESS"
+    - `04-ticket-details-modal-in-progress.png`: Ticket transitioned to IN_PROGRESS via PATCH with "Advance Status to RESOLVED"
+    - `05-ticket-details-modal-resolved.png`: Ticket transitioned to RESOLVED via PATCH with "Advance Status to CLOSED"
+    - `06-ticket-details-modal-closed.png`: Ticket transitioned to terminal CLOSED state
+    - `07-e2e-smoke-test-terminal-pass.jpg`: Automated smoke-test terminal execution passing all 6 end-to-end steps
   - Smoke Test Script: [`backend/scripts/smoke-test.ts`](../../backend/scripts/smoke-test.ts)
   - Automated Integration Tests: [`backend/tests/integration/workflow.integration.test.ts`](../../backend/tests/integration/workflow.integration.test.ts)
   - Frontend API Service: [`frontend/src/services/requestsApi.ts`](../../frontend/src/services/requestsApi.ts)

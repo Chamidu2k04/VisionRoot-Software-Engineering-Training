@@ -77,6 +77,7 @@ VisionRoot-Software-Engineering-Training/
 │   │   ├── daily-log.md
 │   │   └── persistence-verification.md
 │   └── Day-07/
+│       ├── screenshots/       # Full-stack integration & E2E smoke test screenshots
 │       ├── daily-log.md       # Full-stack integration daily evidence
 │       └── integration-bug-log.md # CORS and error unwrapping diagnosis & resolution
 ├── .editorconfig              # Standardized indentation, character encoding, and line endings
