@@ -23,13 +23,20 @@ VisionRoot-Software-Engineering-Training/
 ├── .github/                   # GitHub workflows, issue templates, and pull request templates
 │   └── pull_request_template.md
 ├── docs/                      # Architectural, requirement, and API specifications
-│   └── requirements.md
+│   ├── requirements.md
+│   ├── architecture.md
+│   ├── data-model.md
+│   ├── api-contract.md
+│   └── decisions/
+│       └── ADR-001-architecture.md
 ├── frontend/                  # Next.js web client (React, TypeScript, Tailwind CSS)
 ├── backend/                   # Express.js API server (Node.js, TypeScript)
 ├── database/                  # PostgreSQL schema definitions, migrations, and seeds
 ├── tests/                     # Integration, contract, and end-to-end test suites
 ├── evidence/                  # Daily training progress logs, test outputs, and submission evidence
-│   └── Day-01/
+│   ├── Day-01/
+│   │   └── daily-log.md
+│   └── Day-02/
 │       └── daily-log.md
 ├── .env.example               # Template for environment variables across services
 ├── .gitignore                 # Files and directories ignored by Git version control

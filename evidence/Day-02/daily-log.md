@@ -1,0 +1,24 @@
+# Daily Evidence Record — Day 02
+
+- **Date:** 2026-11-12
+- **Day / Topic:** Day 02 — Software Architecture and System Design
+- **Objective:** Design the system architecture, request flow, relational data model, REST API contract, and Architecture Decision Record (ADR-001) prior to writing code.
+- **What I learned:** How to structure a modular monolith with strict dependency boundaries, enforce business invariants in the service layer, design a contract-first REST API, and document architectural trade-offs via an ADR.
+- **What I implemented:** Created `docs/architecture.md`, `docs/data-model.md`, `docs/api-contract.md`, and `docs/decisions/ADR-001-architecture.md`.
+- **Files / folders changed:**
+  - `docs/architecture.md`
+  - `docs/data-model.md`
+  - `docs/api-contract.md`
+  - `docs/decisions/ADR-001-architecture.md`
+  - `evidence/Day-02/daily-log.md`
+- **How I tested it:** Cross-checked all API endpoints, status codes, database constraints, and layer responsibilities against `docs/requirements.md` user stories US-01 through US-06.
+- **Evidence links (screenshots, tests, diagrams):** `docs/architecture.md`, `docs/data-model.md`, `docs/api-contract.md`, `docs/decisions/ADR-001-architecture.md`
+- **Problem encountered:** None.
+- **How I investigated it:** N/A
+- **Root cause:** N/A
+- **How I fixed it:** N/A
+- **What I would improve:** Export the Mermaid diagrams as high-resolution PNGs if required for offline presentation slides.
+- **GitHub branch:** `docs/day-02-architecture`
+- **Pull request:** Created upon branch push to `main`
+- **Commit hash:** Recorded in Git commit history for `docs/day-02-architecture`
+- **Blockers / questions for supervisor:** None.
