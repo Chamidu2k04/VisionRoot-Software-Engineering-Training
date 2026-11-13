@@ -1,0 +1,28 @@
+# Daily Evidence Record — Day 03
+
+- **Date:** 2026-11-13
+- **Day / Topic:** Day 03 — GitHub Workflow and Environment Setup
+- **Objective:** Make the project reproducible for any developer/reviewer and establish a professional Git contribution, secret-protection, and formatting workflow.
+- **What I learned:** How to structure environment variable templates (`.env.example`) across frontend and backend without leaking credentials, configure standardized code formatting (`.prettierrc`, `.editorconfig`), and write a reproducible onboarding `README.md`.
+- **What I implemented:** Created root `package.json`, `.prettierrc`, `.prettierignore`, `.editorconfig`, `backend/.env.example`, `frontend/.env.example`, and updated `README.md` with complete local setup and Git workflow instructions.
+- **Files / folders changed:**
+  - `package.json`
+  - `.prettierrc`
+  - `.prettierignore`
+  - `.editorconfig`
+  - `.env.example`
+  - `backend/.env.example`
+  - `frontend/.env.example`
+  - `README.md`
+  - `evidence/Day-03/daily-log.md`
+- **How I tested it:** Verified `.gitignore` rules exclude `.env` and `.env.local` while tracking `.env.example` files, reviewed `README.md` setup steps from a clean-clone perspective, and verified zero credentials exist in the repository tree.
+- **Evidence links (screenshots, tests, diagrams):** `README.md`, `.env.example`, `backend/.env.example`, `frontend/.env.example`, `.github/pull_request_template.md`
+- **Problem encountered:** None.
+- **How I investigated it:** N/A
+- **Root cause:** N/A
+- **How I fixed it:** N/A
+- **What I would improve:** Add automated pre-commit hooks (Husky + lint-staged) once backend and frontend packages are installed.
+- **GitHub branch:** `chore/day-03-workflow-and-env-setup`
+- **Pull request:** Created upon branch push to `main`
+- **Commit hash:** Recorded in Git commit history for `chore/day-03-workflow-and-env-setup`
+- **Blockers / questions for supervisor:** None.

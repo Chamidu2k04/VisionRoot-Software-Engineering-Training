@@ -16,7 +16,7 @@ The system is architected as a modular monolith to maintain clear separation of 
 
 ---
 
-## Repository Structure
+## Repository Directory Structure
 
 ```text
 VisionRoot-Software-Engineering-Training/
@@ -30,16 +30,24 @@ VisionRoot-Software-Engineering-Training/
 │   └── decisions/
 │       └── ADR-001-architecture.md
 ├── frontend/                  # Next.js web client (React, TypeScript, Tailwind CSS)
+│   └── .env.example           # Frontend environment template
 ├── backend/                   # Express.js API server (Node.js, TypeScript)
+│   └── .env.example           # Backend environment template
 ├── database/                  # PostgreSQL schema definitions, migrations, and seeds
 ├── tests/                     # Integration, contract, and end-to-end test suites
 ├── evidence/                  # Daily training progress logs, test outputs, and submission evidence
 │   ├── Day-01/
 │   │   └── daily-log.md
-│   └── Day-02/
+│   ├── Day-02/
+│   │   └── daily-log.md
+│   └── Day-03/
 │       └── daily-log.md
-├── .env.example               # Template for environment variables across services
-├── .gitignore                 # Files and directories ignored by Git version control
+├── .editorconfig              # Standardized indentation, character encoding, and line endings
+├── .env.example               # Root unified environment variable template
+├── .gitignore                 # Files and patterns ignored by Git version control
+├── .prettierignore            # Files and directories ignored by Prettier
+├── .prettierrc                # Prettier code formatting rules
+├── package.json               # Root workspace scripts and developer tooling
 └── README.md                  # Project overview, repository metadata, and developer documentation
 ```
 
@@ -51,37 +59,143 @@ VisionRoot-Software-Engineering-Training/
 - **`database/`**: Houses SQL migrations, seed scripts, and database schema documentation for PostgreSQL.
 - **`tests/`**: Contains automated end-to-end and cross-layer integration tests.
 - **`evidence/`**: Preserves structured daily logs, test run results, and verification documentation for the VisionRoot training track.
+- **`.github/`**: Houses GitHub issue templates, pull request templates, and workflow automations.
 
 ---
 
-## Setup Instructions
+## Local Environment Setup
 
-> *Note: Detailed setup instructions and step-by-step commands will be finalized once the backend, database, and frontend modules are initialized.*
+Follow these step-by-step instructions to prepare your local development environment from scratch.
 
-### Prerequisites
+### 1. Prerequisites
 
-- Node.js (LTS version 20+ recommended)
-- npm or pnpm
-- PostgreSQL (v15+)
-- Git & GitHub Desktop
+Ensure the following tools are installed on your workstation:
+- **Node.js**: v20+ LTS ([Download](https://nodejs.org/))
+- **npm**: v10+ (bundled with Node.js)
+- **PostgreSQL**: v15+ ([Download](https://www.postgresql.org/download/))
+- **Git**: v2.40+ & GitHub Desktop ([Download Git](https://git-scm.com/))
 
-### Environment Configuration
+### 2. Cloning the Repository
 
-Copy the example environment file to configure local variables:
+Clone the project and navigate into the root directory:
 
 ```bash
-cp .env.example .env
+git clone https://github.com/chamidu2k04/VisionRoot-Software-Engineering-Training.git
+cd VisionRoot-Software-Engineering-Training
 ```
 
-Update `.env` with your local PostgreSQL database credentials and server ports.
+### 3. Configuring Environment Variables
+
+> [!CAUTION]
+> **Secret Hygiene Warning:** Never commit real `.env` or `.env.local` files containing actual passwords or secret keys to version control. All `.env` and `.env.*` files (except `.env.example`) are ignored by `.gitignore`.
+
+Copy the template environment files for backend and frontend:
+
+**Backend Environment:**
+```bash
+cp backend/.env.example backend/.env
+```
+*(On Windows PowerShell: `Copy-Item backend/.env.example backend/.env`)*
+
+Open `backend/.env` and update the `DATABASE_URL` with your local PostgreSQL password:
+```env
+PORT=5000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:3000
+DATABASE_URL=postgresql://postgres:your_password_here@localhost:5432/service_requests_db
+```
+
+**Frontend Environment:**
+```bash
+cp frontend/.env.example frontend/.env.local
+```
+*(On Windows PowerShell: `Copy-Item frontend/.env.example frontend/.env.local`)*
+
+Open `frontend/.env.local` and confirm the API endpoint:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+```
+
+### 4. Database Creation & Migrations
+
+Create the PostgreSQL database using `createdb` (or inside the PostgreSQL shell `psql`):
+
+```bash
+# Using PostgreSQL CLI
+createdb -U postgres service_requests_db
+```
+*Or execute within `psql`:*
+```sql
+CREATE DATABASE service_requests_db;
+```
+
+Execute database migrations to initialize tables and indexes:
+
+```bash
+cd backend
+npm run migrate
+cd ..
+```
+
+### 5. Running the Application
+
+Open two separate terminal windows or tabs to run the backend and frontend concurrently:
+
+**Terminal 1 — Backend API:**
+```bash
+cd backend
+npm install
+npm run dev
+```
+The backend API server will start on [http://localhost:5000](http://localhost:5000) (API root: `http://localhost:5000/api`).
+
+**Terminal 2 — Frontend UI:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+The Next.js client will start on [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Running Tests
+## Code Formatting & Linting
 
-> *Note: Exact execution commands and test scripts will be configured as testing harnesses (Jest / Vitest / Supertest) are integrated into the respective modules.*
+Code formatting standards are enforced across the repository using Prettier and EditorConfig.
 
-Planned testing commands:
-- **Backend Unit & Integration Tests:** `npm run test` (in `backend/`)
-- **Frontend Component Tests:** `npm run test` (in `frontend/`)
-- **Full Suite Verification:** `npm run test:all`
+Run formatting checks and auto-formatting from the repository root:
+
+```bash
+# Check code formatting compliance across files
+npm run format:check
+
+# Automatically format all supported code, documentation, and config files
+npm run format
+
+# Run linting across modules (once initialized)
+npm run lint
+```
+
+---
+
+## Git & Contribution Workflow
+
+To maintain code quality, auditability, and clean Git history throughout the VisionRoot training, follow this workflow:
+
+1. **Branching Strategy:**
+   - Always branch off the latest `main` branch.
+   - Use descriptive branch naming conventions:
+     - Features: `feat/day-XX-short-description`
+     - Documentation: `docs/day-XX-short-description`
+     - Configuration/Tooling: `chore/day-XX-short-description`
+     - Fixes: `fix/day-XX-short-description`
+2. **Focused Commits:**
+   - Commit code in logical, atomic increments.
+   - Use conventional commit messages: `feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, `test:`.
+   - Never commit sensitive files, credentials, or transient build outputs (`dist/`, `.next/`, `node_modules/`, `.env*`).
+3. **Pull Request & Code Review:**
+   - Open a Pull Request targeting `main`.
+   - Complete the PR description following the template in [`.github/pull_request_template.md`](file:///.github/pull_request_template.md).
+   - Ensure all automated checks (formatting, linting, tests) pass before requesting supervisor review.
+4. **Daily Evidence Record:**
+   - Log daily progress, technical insights, implementation details, testing results, and blockers under `evidence/Day-XX/daily-log.md`.
