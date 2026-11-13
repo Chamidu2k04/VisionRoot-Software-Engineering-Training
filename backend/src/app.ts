@@ -10,12 +10,15 @@ export function createApp(repo?: IRequestRepository): Express {
   const app = express();
 
   // 1. Cross-Origin Resource Sharing (CORS)
-  app.use(
-    cors({
-      origin: env.corsOrigin === '*' ? '*' : env.corsOrigin,
-      credentials: true,
-    })
-  );
+  const corsOptions: cors.CorsOptions = {
+    origin: env.corsOrigin === '*' ? '*' : env.corsOrigin,
+    methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  };
+
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
 
   // 2. Body Parser (JSON payload parsing)
   app.use(express.json());

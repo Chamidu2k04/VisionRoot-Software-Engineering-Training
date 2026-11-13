@@ -199,18 +199,14 @@ const mockApi = {
 };
 
 /**
- * Fetch wrapper that handles JSON errors and falls back to mock storage
- * when backend is unreachable or NEXT_PUBLIC_USE_MOCK is set.
+ * Fetch wrapper that communicates with the live Express API.
+ * Automatically parses backend standardized error envelopes ({ error: { code, message, details } })
+ * and propagates network/API errors cleanly without silent fallback to mock data.
  */
 async function apiFetch<T>(
   endpoint: string,
-  options?: RequestInit,
-  mockFallback?: () => Promise<T>
+  options?: RequestInit
 ): Promise<T> {
-  if (FORCE_MOCK && mockFallback) {
-    return mockFallback();
-  }
-
   const url = `${API_BASE_URL}${endpoint}`;
 
   try {
@@ -227,93 +223,105 @@ async function apiFetch<T>(
       let errorPayload: ApiErrorPayload | undefined;
       try {
         const errorJson: ApiErrorResponse = await res.json();
-        errorPayload = errorJson.error;
+        if (errorJson && typeof errorJson === 'object' && errorJson.error) {
+          errorPayload = errorJson.error;
+        }
       } catch {
-        // Response was not JSON
+        // Response was not JSON (e.g., gateway 502/504 or network proxy response)
       }
+
+      const message =
+        errorPayload?.message ||
+        `Request failed with status ${res.status}: ${res.statusText || 'Server Error'}`;
 
       throw new ApiError(
         res.status,
-        errorPayload?.message || `HTTP error ${res.status}: ${res.statusText}`,
-        errorPayload
+        message,
+        errorPayload || {
+          code: `HTTP_${res.status}`,
+          message,
+          details: [],
+        }
       );
     }
 
     return (await res.json()) as T;
   } catch (error) {
-    // If backend is unreachable (network error / ECONNREFUSED) and we have mock fallback
-    if (
-      mockFallback &&
-      (error instanceof TypeError ||
-        (error instanceof Error &&
-          (error.message.includes('fetch') ||
-            error.message.includes('ECONNREFUSED'))))
-    ) {
-      console.warn(
-        `[requestsApi] Backend at ${url} unreachable. Using demo fallback mode.`
-      );
-      return mockFallback();
-    }
-
     if (error instanceof ApiError) {
       throw error;
     }
 
-    throw new ApiError(
-      500,
-      error instanceof Error ? error.message : 'Unknown network error'
-    );
+    // Network error (offline, connection refused, CORS failure, etc.)
+    const errorMessage =
+      error instanceof Error && error.message
+        ? `Unable to connect to backend API server at ${API_BASE_URL} (${error.message}). Please verify the server is running.`
+        : `Network error: Failed to communicate with backend at ${API_BASE_URL}.`;
+
+    throw new ApiError(0, errorMessage, {
+      code: 'NETWORK_ERROR',
+      message: errorMessage,
+      details: [],
+    });
   }
 }
 
 export const requestsApi = {
   /**
    * Retrieves a list of service requests, optionally filtered by status.
+   * Dispatches GET /api/requests or GET /api/requests?status={status}.
    */
   async getRequests(status?: RequestStatus): Promise<ServiceRequest[]> {
+    if (FORCE_MOCK) {
+      return mockApi.getRequests(status);
+    }
     const query = status ? `?status=${encodeURIComponent(status)}` : '';
-    return apiFetch<ServiceRequest[]>(`/requests${query}`, { method: 'GET' }, () =>
-      mockApi.getRequests(status)
-    );
+    return apiFetch<ServiceRequest[]>(`/requests${query}`, { method: 'GET' });
   },
 
   /**
    * Retrieves full details for a single service request by ID.
+   * Dispatches GET /api/requests/:id.
    */
   async getRequestById(id: string): Promise<ServiceRequest> {
-    return apiFetch<ServiceRequest>(`/requests/${encodeURIComponent(id)}`, { method: 'GET' }, () =>
-      mockApi.getRequestById(id)
-    );
+    if (FORCE_MOCK) {
+      return mockApi.getRequestById(id);
+    }
+    return apiFetch<ServiceRequest>(`/requests/${encodeURIComponent(id)}`, {
+      method: 'GET',
+    });
   },
 
   /**
    * Submits and persists a new service request with initial status 'OPEN'.
+   * Dispatches POST /api/requests.
    */
   async createRequest(payload: CreateRequestInput): Promise<ServiceRequest> {
-    return apiFetch<ServiceRequest>(
-      '/requests',
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      },
-      () => mockApi.createRequest(payload)
-    );
+    if (FORCE_MOCK) {
+      return mockApi.createRequest(payload);
+    }
+    return apiFetch<ServiceRequest>('/requests', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
   },
 
   /**
    * Transitions the lifecycle status of an existing request.
+   * Dispatches PATCH /api/requests/:id/status.
    */
   async updateRequestStatus(
     id: string,
     status: RequestStatus
   ): Promise<ServiceRequest> {
+    if (FORCE_MOCK) {
+      return mockApi.updateRequestStatus(id, status);
+    }
     return apiFetch<ServiceRequest>(
       `/requests/${encodeURIComponent(id)}/status`,
       {
         method: 'PATCH',
         body: JSON.stringify({ status }),
-      },
-      () => mockApi.updateRequestStatus(id, status)
+      }
     );
   },
 };

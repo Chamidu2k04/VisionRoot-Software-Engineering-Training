@@ -72,10 +72,13 @@ VisionRoot-Software-Engineering-Training/
 │   │   ├── daily-log.md
 │   │   ├── layer-responsibilities.md
 │   │   └── api-verification.md
-│   └── Day-06/
-│       ├── screenshots/       # Postman, migration runner & database schema screenshots
-│       ├── daily-log.md
-│       └── persistence-verification.md
+│   ├── Day-06/
+│   │   ├── screenshots/       # Postman, migration runner & database schema screenshots
+│   │   ├── daily-log.md
+│   │   └── persistence-verification.md
+│   └── Day-07/
+│       ├── daily-log.md       # Full-stack integration daily evidence
+│       └── integration-bug-log.md # CORS and error unwrapping diagnosis & resolution
 ├── .editorconfig              # Standardized indentation, character encoding, and line endings
 ├── .env.example               # Root unified environment variable template
 ├── .gitignore                 # Files and patterns ignored by Git version control
@@ -219,7 +222,7 @@ npm run build
 # Run ESLint across backend TypeScript sources
 npm run lint
 
-# Run automated unit tests for service business logic and state machine
+# Run automated unit and integration tests (service, state machine, repository, workflow)
 npm test
 
 # Run repeatable SQL schema migrations against PostgreSQL
@@ -227,6 +230,9 @@ npm run migrate
 
 # Run live automated HTTP verification suite
 npm run verify
+
+# Run end-to-end workflow smoke test against running server
+npm run smoke-test
 ```
 
 **Terminal 2 — Frontend UI (Next.js):**
@@ -237,9 +243,9 @@ npm run dev
 ```
 The Next.js client will start on [http://localhost:3000](http://localhost:3000).
 
-> [!TIP]
-> **Day 04 Demo / Preview Mode:**
-> The frontend API client (`frontend/src/services/requestsApi.ts`) includes an automatic fallback mock store. If the backend is not yet running on port 5000 (or if `NEXT_PUBLIC_USE_MOCK=true` is set in `frontend/.env.local`), the UI automatically operates in demo mode. You can test form submissions, validation errors, status filtering, and modal lifecycle transitions immediately without an active database or backend.
+> [!NOTE]
+> **Day 07 Full-Stack Integration:**
+> The frontend API client (`frontend/src/services/requestsApi.ts`) communicates directly with the live Express backend API at `http://localhost:5000/api` (configured via `NEXT_PUBLIC_API_URL`). Real network failures and server validation/transition rejections propagate transparently to the user interface. An optional mock mode remains available by setting `NEXT_PUBLIC_USE_MOCK=true` for isolated frontend styling previews.
 
 ---
 
