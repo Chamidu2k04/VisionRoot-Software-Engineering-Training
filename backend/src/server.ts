@@ -1,5 +1,6 @@
 import { app } from './app';
 import { env } from './config/environment';
+import { closePool } from './database/connection';
 
 const server = app.listen(env.port, () => {
   console.log('====================================================');
@@ -15,16 +16,18 @@ const server = app.listen(env.port, () => {
 // Graceful shutdown handling
 process.on('SIGINT', () => {
   console.log('\nReceived SIGINT. Shutting down gracefully...');
-  server.close(() => {
-    console.log('HTTP server closed.');
+  server.close(async () => {
+    await closePool().catch(() => {});
+    console.log('HTTP server and database pool closed.');
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', () => {
   console.log('\nReceived SIGTERM. Shutting down gracefully...');
-  server.close(() => {
-    console.log('HTTP server closed.');
+  server.close(async () => {
+    await closePool().catch(() => {});
+    console.log('HTTP server and database pool closed.');
     process.exit(0);
   });
 });

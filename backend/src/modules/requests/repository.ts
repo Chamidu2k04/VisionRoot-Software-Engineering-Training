@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { QueryResultRow, QueryResult } from 'pg';
 import { RequestStatus, ServiceRequest } from './types';
+import { query as defaultQuery } from '../../database/connection';
 
 export interface CreateServiceRequestData {
   title: string;
@@ -16,6 +18,108 @@ export interface IRequestRepository {
   updateStatus(id: string, status: RequestStatus): Promise<ServiceRequest | null>;
 }
 
+interface ServiceRequestDbRow extends QueryResultRow {
+  id: string;
+  title: string;
+  description: string;
+  category: ServiceRequest['category'];
+  priority: ServiceRequest['priority'];
+  status: RequestStatus;
+  created_at: Date | string;
+  updated_at: Date | string;
+}
+
+/**
+ * Maps a raw PostgreSQL query row into a typed ServiceRequest domain object.
+ */
+function mapRowToServiceRequest(row: ServiceRequestDbRow): ServiceRequest {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    category: row.category,
+    priority: row.priority,
+    status: row.status,
+    created_at:
+      row.created_at instanceof Date
+        ? row.created_at.toISOString()
+        : new Date(row.created_at).toISOString(),
+    updated_at:
+      row.updated_at instanceof Date
+        ? row.updated_at.toISOString()
+        : new Date(row.updated_at).toISOString(),
+  };
+}
+
+/**
+ * PostgreSQL Implementation of IRequestRepository.
+ * Uses parameterized queries to prevent SQL injection and ensure transactional consistency.
+ */
+export class PostgresRequestRepository implements IRequestRepository {
+  constructor(
+    private readonly queryFn: <R extends QueryResultRow = QueryResultRow>(
+      text: string,
+      params?: unknown[]
+    ) => Promise<QueryResult<R>> = defaultQuery
+  ) {}
+
+  async create(data: CreateServiceRequestData): Promise<ServiceRequest> {
+    const sql = `
+      INSERT INTO service_requests (title, description, category, priority, status)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *;
+    `;
+    const params = [data.title, data.description, data.category, data.priority, data.status];
+    const result = await this.queryFn<ServiceRequestDbRow>(sql, params);
+    return mapRowToServiceRequest(result.rows[0]);
+  }
+
+  async findAll(status?: RequestStatus): Promise<ServiceRequest[]> {
+    const sql = `
+      SELECT * FROM service_requests
+      WHERE ($1::text IS NULL OR status = $1)
+      ORDER BY created_at DESC;
+    `;
+    const params = [status || null];
+    const result = await this.queryFn<ServiceRequestDbRow>(sql, params);
+    return result.rows.map(mapRowToServiceRequest);
+  }
+
+  async findById(id: string): Promise<ServiceRequest | null> {
+    const sql = `
+      SELECT * FROM service_requests
+      WHERE id = $1;
+    `;
+    const params = [id];
+    const result = await this.queryFn<ServiceRequestDbRow>(sql, params);
+    if (result.rows.length === 0) {
+      return null;
+    }
+    return mapRowToServiceRequest(result.rows[0]);
+  }
+
+  async updateStatus(
+    id: string,
+    status: RequestStatus
+  ): Promise<ServiceRequest | null> {
+    const sql = `
+      UPDATE service_requests
+      SET status = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const params = [status, id];
+    const result = await this.queryFn<ServiceRequestDbRow>(sql, params);
+    if (result.rows.length === 0) {
+      return null;
+    }
+    return mapRowToServiceRequest(result.rows[0]);
+  }
+}
+
+/**
+ * In-memory repository implementation preserved for unit tests and isolated environments.
+ */
 export class InMemoryRequestRepository implements IRequestRepository {
   private requests: Map<string, ServiceRequest> = new Map();
 
