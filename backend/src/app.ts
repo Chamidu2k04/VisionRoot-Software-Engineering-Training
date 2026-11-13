@@ -1,10 +1,12 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { env } from './config/environment';
-import { requestsRouter } from './modules/requests/routes';
+import { createRequestsRouter, requestsRouter } from './modules/requests/routes';
+import { IRequestRepository } from './modules/requests/repository';
 import { errorHandler } from './middleware/error-handler';
+import { checkDatabaseHealth } from './database/connection';
 
-export function createApp(): Express {
+export function createApp(repo?: IRequestRepository): Express {
   const app = express();
 
   // 1. Cross-Origin Resource Sharing (CORS)
@@ -31,16 +33,26 @@ export function createApp(): Express {
   });
 
   // 4. Root Health Check Endpoint
-  app.get('/health', (_req: Request, res: Response) => {
-    res.status(200).json({
-      status: 'ok',
-      service: 'service-request-api',
-      timestamp: new Date().toISOString(),
-    });
+  app.get('/health', async (_req: Request, res: Response) => {
+    const isDbConnected = await checkDatabaseHealth();
+    if (isDbConnected) {
+      res.status(200).json({
+        status: 'ok',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      res.status(503).json({
+        status: 'error',
+        database: 'disconnected',
+        timestamp: new Date().toISOString(),
+      });
+    }
   });
 
   // 5. API Routes
-  app.use('/api', requestsRouter);
+  const router = repo ? createRequestsRouter(repo) : requestsRouter;
+  app.use('/api', router);
 
   // 6. 404 Catch-All Route Handler
   app.use((req: Request, res: Response) => {

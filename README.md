@@ -42,18 +42,20 @@ VisionRoot-Software-Engineering-Training/
 ├── backend/                   # Express.js API server (Node.js, TypeScript modular monolith)
 │   ├── src/
 │   │   ├── config/            # Environment loading & validation (environment.ts)
+│   │   ├── database/          # PostgreSQL connection pool & migration runner (connection.ts, migrate.ts)
 │   │   ├── errors/            # Custom domain & HTTP error classes (AppError.ts)
 │   │   ├── middleware/        # Centralized error handler & request logging
 │   │   ├── modules/requests/  # Requests feature module (controller, service, repository, routes, schema, types)
 │   │   ├── app.ts             # Express app configuration & middleware pipeline
 │   │   └── server.ts          # Server entry point & graceful shutdown
-│   ├── tests/unit/            # Unit tests for domain service & state machine
+│   ├── tests/unit/            # Unit tests for domain service, state machine & repository
 │   ├── scripts/               # Automated live HTTP API verification suite
 │   ├── package.json           # Backend dependencies and scripts
 │   ├── tsconfig.json          # TypeScript compiler configuration
 │   ├── .eslintrc.json         # ESLint configuration
 │   └── .env.example           # Backend environment template
 ├── database/                  # PostgreSQL schema definitions, migrations, and seeds
+│   └── migrations/            # Repeatable SQL schema migration files (001_create_service_requests.sql)
 ├── tests/                     # Integration, contract, and end-to-end test suites
 ├── evidence/                  # Daily training progress logs, test outputs, and submission evidence
 │   ├── Day-01/
@@ -65,11 +67,15 @@ VisionRoot-Software-Engineering-Training/
 │   ├── Day-04/
 │   │   ├── daily-log.md
 │   │   └── notes.md
-│   └── Day-05/
-│       ├── screenshots/       # Postman & browser visual verification screenshots
+│   ├── Day-05/
+│   │   ├── screenshots/       # Postman & browser visual verification screenshots
+│   │   ├── daily-log.md
+│   │   ├── layer-responsibilities.md
+│   │   └── api-verification.md
+│   └── Day-06/
+│       ├── screenshots/       # Postman, migration runner & database schema screenshots
 │       ├── daily-log.md
-│       ├── layer-responsibilities.md
-│       └── api-verification.md
+│       └── persistence-verification.md
 ├── .editorconfig              # Standardized indentation, character encoding, and line endings
 ├── .env.example               # Root unified environment variable template
 ├── .gitignore                 # Files and patterns ignored by Git version control
@@ -144,16 +150,54 @@ Open `frontend/.env.local` and confirm the API endpoint:
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-### 4. Database Creation & Migrations (Scheduled for Day 06)
+### 4. Database Creation & Schema Migrations (PostgreSQL)
 
-> [!NOTE]
-> **Day 05 Status:** Day 05 utilizes an `InMemoryRequestRepository` that implements the clean `IRequestRepository` interface. The backend API is completely runnable and testable immediately without an external PostgreSQL service dependency. PostgreSQL database provisioning and SQL migrations will be established in Day 06.
+The Service Request Management System persists entities in a local or cloud-hosted PostgreSQL database. Follow these steps to provision the database and apply the initial schema migrations:
 
-When ready for Day 06 database operations:
+#### Step 4.1: Create the PostgreSQL Database
+Create the database using the PostgreSQL command-line tool `createdb`, or via `psql` / pgAdmin:
+
+**Using CLI (`createdb`):**
 ```bash
-# Using PostgreSQL CLI
 createdb -U postgres service_requests_db
 ```
+
+**Using SQL (`psql` or graphical query tool):**
+```sql
+CREATE DATABASE service_requests_db;
+```
+
+#### Step 4.2: Configure Environment Variables
+Copy the backend environment template and populate `DATABASE_URL` with your local PostgreSQL user, password, host, port, and database name:
+
+```bash
+# On Linux / macOS:
+cp backend/.env.example backend/.env
+
+# On Windows PowerShell:
+Copy-Item backend/.env.example backend/.env
+```
+
+Open `backend/.env` and update the connection string:
+```env
+DATABASE_URL=postgresql://postgres:your_actual_password@localhost:5432/service_requests_db
+```
+
+> [!CAUTION]
+> **Credential Security:** Never commit `backend/.env` or files containing plain-text database credentials to Git.
+
+#### Step 4.3: Execute Schema Migrations
+Run the automated migration runner to apply all SQL migration scripts in `database/migrations/`:
+
+```bash
+cd backend
+npm install
+npm run migrate
+```
+
+This creates the `service_requests` table with UUID generation (`pgcrypto`), domain check constraints, and performance indexes (`idx_service_requests_status_created_at`).
+
+---
 
 ### 5. Running the Application
 
@@ -177,6 +221,9 @@ npm run lint
 
 # Run automated unit tests for service business logic and state machine
 npm test
+
+# Run repeatable SQL schema migrations against PostgreSQL
+npm run migrate
 
 # Run live automated HTTP verification suite
 npm run verify
