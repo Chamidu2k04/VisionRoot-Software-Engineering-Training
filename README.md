@@ -39,7 +39,19 @@ VisionRoot-Software-Engineering-Training/
 │   ├── tsconfig.json          # TypeScript compiler configuration & @/* path aliases
 │   ├── tailwind.config.ts     # Tailwind CSS theme configuration
 │   └── .env.example           # Frontend environment template
-├── backend/                   # Express.js API server (Node.js, TypeScript)
+├── backend/                   # Express.js API server (Node.js, TypeScript modular monolith)
+│   ├── src/
+│   │   ├── config/            # Environment loading & validation (environment.ts)
+│   │   ├── errors/            # Custom domain & HTTP error classes (AppError.ts)
+│   │   ├── middleware/        # Centralized error handler & request logging
+│   │   ├── modules/requests/  # Requests feature module (controller, service, repository, routes, schema, types)
+│   │   ├── app.ts             # Express app configuration & middleware pipeline
+│   │   └── server.ts          # Server entry point & graceful shutdown
+│   ├── tests/unit/            # Unit tests for domain service & state machine
+│   ├── scripts/               # Automated live HTTP API verification suite
+│   ├── package.json           # Backend dependencies and scripts
+│   ├── tsconfig.json          # TypeScript compiler configuration
+│   ├── .eslintrc.json         # ESLint configuration
 │   └── .env.example           # Backend environment template
 ├── database/                  # PostgreSQL schema definitions, migrations, and seeds
 ├── tests/                     # Integration, contract, and end-to-end test suites
@@ -50,9 +62,14 @@ VisionRoot-Software-Engineering-Training/
 │   │   └── daily-log.md
 │   ├── Day-03/
 │   │   └── daily-log.md
-│   └── Day-04/
+│   ├── Day-04/
+│   │   ├── daily-log.md
+│   │   └── notes.md
+│   └── Day-05/
+│       ├── screenshots/       # Postman & browser visual verification screenshots
 │       ├── daily-log.md
-│       └── notes.md
+│       ├── layer-responsibilities.md
+│       └── api-verification.md
 ├── .editorconfig              # Standardized indentation, character encoding, and line endings
 ├── .env.example               # Root unified environment variable template
 ├── .gitignore                 # Files and patterns ignored by Git version control
@@ -127,25 +144,15 @@ Open `frontend/.env.local` and confirm the API endpoint:
 NEXT_PUBLIC_API_URL=http://localhost:5000/api
 ```
 
-### 4. Database Creation & Migrations
+### 4. Database Creation & Migrations (Scheduled for Day 06)
 
-Create the PostgreSQL database using `createdb` (or inside the PostgreSQL shell `psql`):
+> [!NOTE]
+> **Day 05 Status:** Day 05 utilizes an `InMemoryRequestRepository` that implements the clean `IRequestRepository` interface. The backend API is completely runnable and testable immediately without an external PostgreSQL service dependency. PostgreSQL database provisioning and SQL migrations will be established in Day 06.
 
+When ready for Day 06 database operations:
 ```bash
 # Using PostgreSQL CLI
 createdb -U postgres service_requests_db
-```
-*Or execute within `psql`:*
-```sql
-CREATE DATABASE service_requests_db;
-```
-
-Execute database migrations to initialize tables and indexes:
-
-```bash
-cd backend
-npm run migrate
-cd ..
 ```
 
 ### 5. Running the Application
@@ -158,7 +165,22 @@ cd backend
 npm install
 npm run dev
 ```
-The backend API server will start on [http://localhost:5000](http://localhost:5000) (API root: `http://localhost:5000/api`).
+The backend API server will start on [http://localhost:5000](http://localhost:5000) (Health check: `http://localhost:5000/api/health`, Requests endpoint: `http://localhost:5000/api/requests`).
+
+Additional backend commands:
+```bash
+# Type check and build TypeScript into dist/
+npm run build
+
+# Run ESLint across backend TypeScript sources
+npm run lint
+
+# Run automated unit tests for service business logic and state machine
+npm test
+
+# Run live automated HTTP verification suite
+npm run verify
+```
 
 **Terminal 2 — Frontend UI (Next.js):**
 ```bash
