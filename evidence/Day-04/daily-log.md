@@ -1,0 +1,55 @@
+# Daily Evidence Record — Day 04
+
+- **Date:** 2026-11-13
+- **Day / Topic:** Day 04 — Frontend Architecture and UI
+- **Objective:** Establish the Next.js frontend architecture, TypeScript interfaces matching the API contract, dedicated API client layer with mock fallback, and responsive UI components for creating, listing, filtering, and advancing service requests with clear visual states.
+- **What I learned:** How to design clean component boundaries between page orchestrators, presentational feature components, and an isolated API client service; how to provide comprehensive UI state handling (loading skeletons, empty states, inline validation errors, and API error banners with retry mechanisms); and why client-side validation serves user experience while server-side validation acts as the authoritative guardian of data integrity.
+- **What I implemented:**
+  - Initialized Next.js (App Router), TypeScript, and Tailwind CSS setup in `frontend/`.
+  - Created `frontend/src/types/request.ts` with TypeScript interfaces and enums (`RequestCategory`, `RequestPriority`, `RequestStatus`, `ServiceRequest`, `CreateRequestInput`, `ApiErrorResponse`).
+  - Created `frontend/src/services/requestsApi.ts` encapsulating all HTTP communication with Next.js environment configuration and a robust demo/fallback mock store allowing offline previewing and testing prior to Day 05 backend integration.
+  - Built `frontend/src/features/requests/components/CreateRequestForm.tsx` with accessible semantic markup, trimmed client-side length validation (title: 5–120 chars, description: 10–2000 chars), inline validation warnings, submission loading state, and success/error banners.
+  - Built `frontend/src/features/requests/components/RequestList.tsx` supporting category badges, priority badges, lifecycle status badges, formatted timestamps, status filter tabs, loading skeleton placeholders, empty state guidance, and recoverable error state with a "Retry" button.
+  - Built `frontend/src/features/requests/components/RequestDetailsModal.tsx` providing ticket inspection, identifier inspection, lifecycle state machine visualizer, and strict next-status transition buttons (`OPEN -> IN_PROGRESS -> RESOLVED -> CLOSED`).
+  - Built `frontend/src/app/page.tsx` integrating all feature components into a cohesive, responsive dashboard layout.
+  - Authored comprehensive architectural notes in `evidence/Day-04/notes.md`.
+  - Updated root `README.md` with frontend installation and development server commands.
+- **Files / folders changed:**
+  - `frontend/package.json`
+  - `frontend/tsconfig.json`
+  - `frontend/next.config.mjs`
+  - `frontend/tailwind.config.ts`
+  - `frontend/postcss.config.mjs`
+  - `frontend/src/app/globals.css`
+  - `frontend/src/app/layout.tsx`
+  - `frontend/src/app/page.tsx`
+  - `frontend/src/types/request.ts`
+  - `frontend/src/services/requestsApi.ts`
+  - `frontend/src/features/requests/components/CreateRequestForm.tsx`
+  - `frontend/src/features/requests/components/RequestList.tsx`
+  - `frontend/src/features/requests/components/RequestDetailsModal.tsx`
+  - `README.md`
+  - `evidence/Day-04/notes.md`
+  - `evidence/Day-04/daily-log.md`
+- **How I tested it:**
+  - Verified TypeScript interfaces and enums against `docs/api-contract.md` and `docs/requirements.md`.
+  - Code reviewed client-side validation logic verifying boundary conditions (title 5–120, description 10–2000, category and priority enums).
+  - Verified state transitions in `RequestDetailsModal.tsx` and `requestsApi.ts` to enforce the strict lifecycle sequence (`OPEN` → `IN_PROGRESS` → `RESOLVED` → `CLOSED`).
+  - Verified distinct UI rendering paths for Loading state, Empty state, Error state with retry, and Data populated state.
+  - Code formatting check across all new and modified TypeScript, React, and Markdown files.
+- **Evidence links (screenshots, tests, diagrams):**
+  - Architecture and UI State documentation: [`evidence/Day-04/notes.md`](notes.md)
+  - UI Screenshots directory: [`evidence/Day-04/screenshots/`](screenshots/)
+    - `01-create-request-form.png`: Pristine request creation form with accessible labels and input indicators
+    - `02-create-request-validation-errors.png`: Real-time client-side validation errors on required fields
+    - `03-service-requests-list.png`: Service requests list view with cards, metadata badges, and formatted timestamps
+    - `04-empty-state-filter.png`: Context-aware empty state when filtering by a status with no matching requests
+- **Problem encountered:** None.
+- **How I investigated it:** N/A
+- **Root cause:** N/A
+- **How I fixed it:** N/A
+- **What I would improve:** Introduce end-to-end testing with Playwright or Cypress to automate UI workflow verification once backend integration begins on Day 05.
+- **GitHub branch:** `feat/day-04-frontend-ui`
+- **Pull request:** Created upon branch push to `main`
+- **Commit hash:** Recorded in Git commit history for `feat/day-04-frontend-ui`
+- **Blockers / questions for supervisor:** None.

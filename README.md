@@ -30,6 +30,14 @@ VisionRoot-Software-Engineering-Training/
 │   └── decisions/
 │       └── ADR-001-architecture.md
 ├── frontend/                  # Next.js web client (React, TypeScript, Tailwind CSS)
+│   ├── src/
+│   │   ├── app/               # Next.js App Router (layout, global styling, page orchestration)
+│   │   ├── features/requests/ # Feature-based UI components (CreateRequestForm, RequestList, RequestDetailsModal)
+│   │   ├── services/          # Dedicated API client layer (requestsApi.ts) with offline demo fallback
+│   │   └── types/             # TypeScript contracts and enums (request.ts)
+│   ├── package.json           # Frontend dependencies and Next.js scripts
+│   ├── tsconfig.json          # TypeScript compiler configuration & @/* path aliases
+│   ├── tailwind.config.ts     # Tailwind CSS theme configuration
 │   └── .env.example           # Frontend environment template
 ├── backend/                   # Express.js API server (Node.js, TypeScript)
 │   └── .env.example           # Backend environment template
@@ -40,8 +48,11 @@ VisionRoot-Software-Engineering-Training/
 │   │   └── daily-log.md
 │   ├── Day-02/
 │   │   └── daily-log.md
-│   └── Day-03/
-│       └── daily-log.md
+│   ├── Day-03/
+│   │   └── daily-log.md
+│   └── Day-04/
+│       ├── daily-log.md
+│       └── notes.md
 ├── .editorconfig              # Standardized indentation, character encoding, and line endings
 ├── .env.example               # Root unified environment variable template
 ├── .gitignore                 # Files and patterns ignored by Git version control
@@ -149,13 +160,17 @@ npm run dev
 ```
 The backend API server will start on [http://localhost:5000](http://localhost:5000) (API root: `http://localhost:5000/api`).
 
-**Terminal 2 — Frontend UI:**
+**Terminal 2 — Frontend UI (Next.js):**
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 The Next.js client will start on [http://localhost:3000](http://localhost:3000).
+
+> [!TIP]
+> **Day 04 Demo / Preview Mode:**
+> The frontend API client (`frontend/src/services/requestsApi.ts`) includes an automatic fallback mock store. If the backend is not yet running on port 5000 (or if `NEXT_PUBLIC_USE_MOCK=true` is set in `frontend/.env.local`), the UI automatically operates in demo mode. You can test form submissions, validation errors, status filtering, and modal lifecycle transitions immediately without an active database or backend.
 
 ---
 
