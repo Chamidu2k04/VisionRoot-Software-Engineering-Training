@@ -1,0 +1,39 @@
+{
+  "name": "visionroot-backend",
+  "version": "1.0.0",
+  "description": "Service Request Management System — Express & TypeScript Backend API",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "tsx --test tests/**/*.test.ts",
+    "verify": "tsx scripts/verify-api.ts"
+  },
+  "keywords": [
+    "express",
+    "typescript",
+    "zod",
+    "modular-monolith",
+    "service-requests"
+  ],
+  "author": "VisionRoot Trainee Software Engineer",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

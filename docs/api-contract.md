@@ -31,7 +31,7 @@ All error responses across all endpoints follow a uniform structure:
 
 #### Standard Error Codes:
 - `VALIDATION_ERROR` (HTTP `400`): Malformed syntax, invalid field lengths, missing required fields, or unsupported enum values.
-- `INVALID_STATE_TRANSITION` (HTTP `400`): Attempt to transition a service request to a status not permitted by the lifecycle state machine.
+- `INVALID_STATUS_TRANSITION` (or `INVALID_STATE_TRANSITION`) (HTTP `400`): Attempt to transition a service request to a status not permitted by the lifecycle state machine.
 - `INVALID_IDENTIFIER` (HTTP `400`): Provided ID is not a valid RFC-4122 UUID string.
 - `RESOURCE_NOT_FOUND` (HTTP `404`): The requested entity ID does not exist in the database.
 - `SERVICE_UNAVAILABLE` (HTTP `503`): Backend server is alive but failed downstream connectivity checks (e.g. database pool disconnection).
@@ -276,7 +276,7 @@ Transitions the lifecycle status of an existing request according to the strict 
     ```json
     {
       "error": {
-        "code": "INVALID_STATE_TRANSITION",
+        "code": "INVALID_STATUS_TRANSITION",
         "message": "Cannot transition request from 'OPEN' to 'RESOLVED'. Valid next status is: 'IN_PROGRESS'",
         "details": [
           {
